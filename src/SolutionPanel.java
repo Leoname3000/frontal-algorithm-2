@@ -144,6 +144,12 @@ public class SolutionPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        double scaleFactor = 1;
+        var at = new AffineTransform();
+        at.scale(scaleFactor, scaleFactor);
+        Graphics2D g2 = (Graphics2D) g;
+        g2.transform(at);
+
         //TreeSet<Solution.Assignation> assignations = solution.assignations;
 //        ArrayList<Resource> resources = new ArrayList<>();
 //        for (Solution.Assignation assignation : solution.assignations) {
