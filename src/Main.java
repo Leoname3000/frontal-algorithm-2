@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -158,7 +157,7 @@ public class Main {
             JPanel mainPanel = new JPanel();
             mainPanel.setLayout(new BorderLayout());
 
-            CoolFrame coolFrame = new CoolFrame(solution);
+            SolutionPanel solutionPanel = new SolutionPanel(solution);
             //coolFrame.setPreferredSize(new Dimension(3500, 2000));
             //coolFrame.add(new JLabel("res1"));
 
@@ -167,7 +166,7 @@ public class Main {
             //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
             //scrollPane.setPreferredSize(new Dimension(500,500));
 
-            scrollPane.setViewportView(coolFrame);
+            scrollPane.setViewportView(solutionPanel);
             mainPanel.add(scrollPane, BorderLayout.CENTER);
 
             frame.getContentPane().add(mainPanel);

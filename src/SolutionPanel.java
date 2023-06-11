@@ -3,10 +3,9 @@ import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.TreeSet;
 
-public class CoolFrame extends JPanel {
-    public CoolFrame(Solution solution) {
+public class SolutionPanel extends JPanel {
+    public SolutionPanel(Solution solution) {
         this.solution = solution;
         this.offsetY = 40;
         this.height = 30;
