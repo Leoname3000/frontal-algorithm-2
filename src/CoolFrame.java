@@ -54,15 +54,23 @@ public class CoolFrame extends JPanel {
         g.drawString(interval.close.toLocalTime().toString(), x + length - 38, y + height + 15);
     }
 
-    private void drawAssignation(Graphics g, LocalDateTime open, LocalDateTime close, Solution.Assignation assignation) {
-        int x = pixelX(open) + 2;
-        int y = resources.indexOf(assignation.resource) * (height + offsetY) + offsetY + 2;
-        int length = pixelLength(open, close) - 2;
-        g.setColor(Color.pink);
-        g.fillRect(x, y, length, height - 4);
-        g.setColor(Color.red);
-        g.drawRect(x, y, length, height - 4);
-        g.drawString(assignation.operation.toString(), x + length / 2 - 16, y + height / 2 + 2);
+    private void drawAssignation(Graphics g, LocalDateTime open, LocalDateTime close, Solution.Assignation assignation, boolean leftPadding, boolean rightPadding) {
+        int lp = leftPadding ? 2 : 0;
+        int rp = rightPadding ? 2 : 0;
+        int tp = 2, bp = 2;
+
+        int x = pixelX(open) + lp;
+        int y = resources.indexOf(assignation.resource) * (height + offsetY) + offsetY + tp;
+        int length = pixelLength(open, close) - lp - rp;
+        Color fillColor = assignation.operation.interruptable ? Color.orange : Color.pink;
+        g.setColor(fillColor);
+        g.fillRect(x, y, length, height - tp - bp);
+        Color borderColor = Color.red;
+        g.setColor(borderColor);
+        g.drawRect(x, y, length, height - tp - bp);
+
+        String name = assignation.operation.toString();
+        g.drawString(name, x + length / 2 - name.length() * 4, y + height / 2 + 2);
     }
 
     @Override
@@ -84,22 +92,26 @@ public class CoolFrame extends JPanel {
             g.drawString(resource.toString(), 18, y + 20);
         }
         for (Solution.Assignation assignation : solution.assignations) {
-            if (!assignation.operation.interruptable)
-                drawAssignation(g, assignation.time, assignation.operation.endOfService, assignation);
-            else
+            //if (!assignation.operation.interruptable)
+            //    drawAssignation(g, assignation.time, assignation.operation.endOfService, assignation);
+            //else {
+                Duration durationLeft = assignation.operation.duration;
+                LocalDateTime start = assignation.time;
                 for (Schedule.Interval interval : assignation.resource.schedule.intervals) {
-                    if (assignation.operation.endOfService.isBefore(interval.open))
-                        break;
-                    if (!assignation.time.isBefore(interval.open)) {
-                        LocalDateTime open = interval.open;
-                        LocalDateTime close = interval.close;
-                        if (assignation.time.toLocalDate().isEqual(interval.open.toLocalDate()))
-                            open = assignation.time;
-                        if (assignation.operation.endOfService.isBefore(interval.close))
-                            close = assignation.operation.endOfService;
-                        drawAssignation(g, open, close, assignation);
+                    if (interval.close.isAfter(assignation.time)) {
+                        if (start.isBefore(interval.open))
+                            start = interval.open;
+                        if (!start.plus(durationLeft).isAfter(interval.close)) {
+                            drawAssignation(g, start, start.plus(durationLeft), assignation, start.isEqual(assignation.time), start.plus(durationLeft).isEqual(interval.close));
+                            break;
+                        }
+                        else {
+                            durationLeft = durationLeft.minus(Duration.between(start, interval.close));
+                        }
+                        drawAssignation(g, start, interval.close, assignation, start.isEqual(assignation.time), false);
                     }
                 }
+            //}
         }
     }
 
