@@ -1,8 +1,15 @@
+import com.sun.source.tree.Tree;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class SolutionPanel extends JPanel {
     public SolutionPanel(Solution solution) {
@@ -11,18 +18,74 @@ public class SolutionPanel extends JPanel {
         this.height = 30;
         this.entryTime = solution.assignations.first().time.toLocalDate().atStartOfDay();
 
-        this.resources = new ArrayList<>();
-        for (Solution.Assignation assignation : solution.assignations) {
-            resources.add(assignation.resource);
-        }
-
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = (int) screenSize.getWidth();
         int height = (int) screenSize.getHeight();
 
         this.secondsInDay = (int) Duration.ofDays(1).toSeconds();
         this.secondsPerPixel = secondsInDay / width;
-        setPreferredSize(new Dimension(width * 3, (int) (height * 0.5)));
+
+        this.resources = new ArrayList<>();
+        LocalDateTime firstDay = null;
+        LocalDateTime lastDay = null;
+        for (Solution.Assignation assignation : solution.assignations) {
+            resources.add(assignation.resource);
+            if (firstDay == null || assignation.time.isBefore(firstDay))
+                firstDay = assignation.time.toLocalDate().atStartOfDay();
+            if (lastDay == null || assignation.operation.endOfService.isAfter(lastDay))
+                lastDay = assignation.operation.endOfService.toLocalDate().atStartOfDay();
+        }
+        int daysBetween = (int) Duration.between(firstDay, lastDay).toDays() + 1;
+
+        TreeMap<LocalDate, Duration> extraBefore = new TreeMap<>();
+        TreeMap<LocalDate, Duration> extraAfter = new TreeMap<>();
+        for (Resource resource : resources) {
+            for (Schedule.Interval interval : resource.schedule.intervals) {
+                var currentBefore = Duration.between(interval.open.toLocalDate().atStartOfDay(), interval.open);
+                var minBefore = extraBefore.get(interval.open.toLocalDate());
+                if (minBefore == null || currentBefore.compareTo(minBefore) < 0)
+                    extraBefore.put(interval.open.toLocalDate(), currentBefore);
+                var currentAfter = Duration.between(interval.close, interval.close.toLocalDate().plusDays(1).atStartOfDay());
+                var minAfter = extraAfter.get(interval.close.toLocalDate());
+                if (minAfter == null || currentAfter.compareTo(minAfter) < 0)
+                    extraAfter.put(interval.close.toLocalDate(), currentAfter);
+            }
+        }
+//        for (var b : extraBefore.entrySet())
+//            System.out.println("Extra before for " + b.getKey() + " is " + b.getValue());
+//        for (var a : extraAfter.entrySet())
+//            System.out.println("Extra after for " + a.getKey() + " is " + a.getValue());
+
+        extraOffset = new TreeMap<>();
+        for (var entry : extraBefore.entrySet()) {
+            Duration minBetween = Duration.ofMinutes(60);
+            LocalDate day = entry.getKey();
+            Duration extra = entry.getValue();
+            if (extra.compareTo(minBetween) > 0)
+                extra = extra.minus(minBetween);
+            int offset = pixelLength(extra);
+            //System.out.println("--> There is " + offset + " pixels (" + day + "), dur=" + entry.getValue() + ", durInSec=" + (Duration.ofHours(10).toSeconds() / secondsPerPixel));
+            for (var beforeEntry : extraBefore.entrySet())
+                if (beforeEntry.getKey().isBefore(day)) {
+                    extra = beforeEntry.getValue();
+                    if (extra.compareTo(minBetween) > 0)
+                        extra = extra.minus(minBetween);
+                    offset += pixelLength(extra);
+                    //System.out.println("--> There is " + offset + " pixels (" + beforeEntry.getKey() + "), dur=" + beforeEntry.getValue());
+                }
+            for (var afterEntry : extraAfter.entrySet())
+                if (afterEntry.getKey().isBefore(day)) {
+                    extra = afterEntry.getValue();
+                    if (extra.compareTo(minBetween) > 0)
+                        extra = extra.minus(minBetween);
+                    offset += pixelLength(extra);
+                    //System.out.println("--> There is " + offset + " pixels (" + afterEntry.getKey() + "), dur=" + afterEntry.getValue());
+                }
+            extraOffset.put(day, offset);
+            //System.out.println("Offset for day " + day + " is " + offset + " pixels");
+        }
+
+        setPreferredSize(new Dimension(width * daysBetween, (int) (height * 0.5)));
     }
     Solution solution;
     int offsetY;
@@ -31,13 +94,18 @@ public class SolutionPanel extends JPanel {
     int secondsPerPixel;
     LocalDateTime entryTime;
     ArrayList<Resource> resources;
+    TreeMap<LocalDate, Integer> extraOffset;
 
     private int pixelX(LocalDateTime open) {
         Duration duration = Duration.between(entryTime, open);
-        return (int) Math.round((double) duration.toSeconds() / secondsPerPixel);
+        return (int) Math.round((double) duration.toSeconds() / secondsPerPixel) - extraOffset.get(open.toLocalDate());
     }
     private int pixelLength(LocalDateTime open, LocalDateTime close) {
         Duration duration = Duration.between(open, close);
+        return (int) Math.round((double) duration.toSeconds() / secondsPerPixel);
+    }
+
+    private int pixelLength(Duration duration) {
         return (int) Math.round((double) duration.toSeconds() / secondsPerPixel);
     }
 
