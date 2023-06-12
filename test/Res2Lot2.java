@@ -145,24 +145,10 @@ public class Res2Lot2 {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            JPanel mainPanel = new JPanel();
-            mainPanel.setLayout(new BorderLayout());
-
             var task = new Res2Lot2();
             Solution solution = task.frontalAlgorithm.run(new DeadlineComparator());
-            SolutionPanel solutionPanel = new SolutionPanel(solution);
-
-            JScrollPane scrollPane = new JScrollPane();
-
-            scrollPane.setViewportView(solutionPanel);
-            mainPanel.add(scrollPane, BorderLayout.CENTER);
-
-            frame.getContentPane().add(mainPanel);
-            frame.pack();
-            frame.setVisible(true);
+            var outputFrame = new OutputFrame(solution);
+            outputFrame.setVisible(true);
         });
     }
 }
