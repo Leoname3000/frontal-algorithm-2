@@ -17,6 +17,7 @@ public class SolutionPanel extends JPanel {
         this.offsetX = 56;
         this.offsetY = 40;
         this.height = 30;
+        this.scaleFactor = 1;
         this.entryTime = solution.assignations.first().time.toLocalDate().atStartOfDay();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -92,6 +93,7 @@ public class SolutionPanel extends JPanel {
     int offsetX;
     int offsetY;
     int height;
+    public double scaleFactor;
     int secondsInDay;
     int secondsPerPixel;
     LocalDateTime entryTime;
@@ -149,7 +151,6 @@ public class SolutionPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        double scaleFactor = 1;
         var at = new AffineTransform();
         at.scale(scaleFactor, scaleFactor);
         Graphics2D g2 = (Graphics2D) g;
