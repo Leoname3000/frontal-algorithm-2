@@ -178,7 +178,7 @@ public class FrontalAlgorithm {
         if (!penalties.isEmpty()) {
             Duration totalPenalty = Duration.ZERO;
             for (Duration penalty : penalties) {
-                totalPenalty.plus(penalty);
+                totalPenalty = totalPenalty.plus(penalty);
             }
             System.out.println("Total penalty is " + totalPenalty);
         }
