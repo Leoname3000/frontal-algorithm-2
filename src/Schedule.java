@@ -19,6 +19,11 @@ public class Schedule {
         Duration length() {
             return Duration.between(open, close);
         }
+
+        @Override
+        protected Interval clone() {
+            return new Interval(open, close);
+        }
     }
     public static class IntervalComparator implements Comparator<Interval> {
         @Override

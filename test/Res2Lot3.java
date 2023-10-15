@@ -2,7 +2,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import javax.swing.*;
-import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -188,7 +187,7 @@ public class Res2Lot3 {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res2Lot3();
-            Solution solution = task.frontalAlgorithm.run(new DeadlineComparator());
+            Solution solution = task.frontalAlgorithm.run(new LateStartComparator());
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });

@@ -109,7 +109,7 @@ public class Res1Lot2Easy {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res1Lot2Easy();
-            Solution solution = task.frontalAlgorithm.run(new DeadlineComparator());
+            Solution solution = task.frontalAlgorithm.run(new LateStartComparator());
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });

@@ -167,8 +167,8 @@ public class Res1Lot3 {
         expected.assign(op33, startingDate.plusDays(3).atTime(12, 0), res);
         expected.assign(op34, startingDate.plusDays(3).atTime(14, 0), res);
         expected.assign(op35, startingDate.plusDays(4).atTime(10, 0), res);
-        expected.assign(op36, startingDate.plusDays(4).atTime(12, 0), res);
-        expected.assign(op11, startingDate.plusDays(4).atTime(13, 0), res);
+        expected.assign(op11, startingDate.plusDays(4).atTime(12, 0), res);
+        expected.assign(op36, startingDate.plusDays(4).atTime(14, 0), res);
         expected.assign(op14, startingDate.plusDays(4).atTime(15, 0), res);
         expected.assign(op13, startingDate.plusDays(5).atTime(11, 0), res);
         expected.assign(op12, startingDate.plusDays(5).atTime(13, 0), res);
@@ -180,7 +180,7 @@ public class Res1Lot3 {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res1Lot3();
-            Solution solution = task.frontalAlgorithm.run(new DeadlineComparator());
+            Solution solution = task.frontalAlgorithm.run(new LateStartComparator());
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });
