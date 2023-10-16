@@ -53,6 +53,10 @@ public class Operation implements Comparable<Operation> {
         return bestLateStart;
     }
 
+    void reset() {
+        endOfService = null;
+    }
+
     LocalDateTime lateSta() {
         LocalDateTime lateThreshold = lot.deadline;
 

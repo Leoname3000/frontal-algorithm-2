@@ -1,7 +1,3 @@
-import com.sun.source.util.Trees;
-
-import javax.swing.*;
-import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -26,6 +22,34 @@ public class FrontalAlgorithm {
             }
         }
         return minResource;
+    }
+
+    public Solution iterRun(Comparator<Operation> operationComparator, Duration discount) {
+        Solution basicSolution = run(operationComparator);
+        System.out.println("THIS WAS THE BASIC SOLUTION\n");
+        while (basicSolution.totalPenalty().isPositive()) {
+            Lot badLot = basicSolution.penalties.firstEntry().getValue();
+            badLot.discount = badLot.discount.plus(discount);
+            // inside 'run()' subtract lot.discount from lateStart inside each lot's operation 'lateStart()' method
+
+            for (var lot : allLots)
+                for (var operation : lot.operations) {
+                    operation.reset();
+                    for (var resource : operation.group.resources)
+                        resource.reset();
+                }
+
+            Solution discountSolution = run(operationComparator);
+            if (discountSolution.totalPenalty().compareTo(basicSolution.totalPenalty()) < 0) {
+                System.out.println("NEW SOLUTION IS BETTER! - CONTINUE...\n");
+                basicSolution = discountSolution;
+            } else {
+                System.out.println("PREVIOUS SOLUTION WAS BETTER OR EQUAL! - STOPPING!\n");
+                return basicSolution;
+            }
+        }
+        System.out.println("BASIC SOLUTION REMAINS");
+        return basicSolution;
     }
 
     public Solution run(Comparator<Operation> operationComparator) {
@@ -158,7 +182,7 @@ public class FrontalAlgorithm {
         System.out.println("END OF WORK\n" + endOfWork + "\n");
 
         // NEW! Penalty calculation:
-        HashSet<Duration> penalties = new HashSet<>();
+        var penalties = new TreeMap<Duration, Lot>();
         for (Lot lot : allLots) {
             Operation last = null;
             for (Operation operation : lot.operations) {
@@ -169,17 +193,16 @@ public class FrontalAlgorithm {
             assert last != null;
             if (last.endOfService.isAfter(lot.deadline)) {
                 System.out.println(lot + " missed deadline! Late by " + Duration.between(lot.deadline, last.endOfService));
-                penalties.add(Duration.between(lot.deadline, last.endOfService));
+                penalties.put(Duration.between(lot.deadline, last.endOfService), lot);
             }
             else {
                 System.out.println(lot + " processed on time! Early by " + Duration.between(last.endOfService, lot.deadline));
+                penalties.put(Duration.ZERO, lot);
             }
         }
-        if (!penalties.isEmpty()) {
-            Duration totalPenalty = Duration.ZERO;
-            for (Duration penalty : penalties) {
-                totalPenalty = totalPenalty.plus(penalty);
-            }
+        solution.penalties = penalties;
+        Duration totalPenalty = solution.totalPenalty();
+        if (totalPenalty.isPositive()) {
             System.out.println("Total penalty is " + totalPenalty);
         }
         else {

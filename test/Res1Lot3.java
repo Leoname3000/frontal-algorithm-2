@@ -180,7 +180,7 @@ public class Res1Lot3 {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res1Lot3();
-            Solution solution = task.frontalAlgorithm.run(new LateStartComparator());
+            Solution solution = task.frontalAlgorithm.iterRun(new LateStartComparator(), Duration.ofMinutes(30));
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });

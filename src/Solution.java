@@ -1,6 +1,6 @@
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class Solution {
@@ -43,8 +43,20 @@ public class Solution {
 
     public Solution() {
         this.assignations = new TreeSet<>();
+        this.totalPenalty = null;
     }
     TreeSet<Assignation> assignations;
+    public TreeMap<Duration, Lot> penalties;
+    private Duration totalPenalty;
+    public Duration totalPenalty() {
+        if (totalPenalty != null) return totalPenalty;
+        totalPenalty = Duration.ZERO;
+        for (var penalty : penalties.keySet()) {
+            totalPenalty = totalPenalty.plus(penalty);
+        }
+        return totalPenalty;
+    }
+
     public void assign(Operation operation, LocalDateTime time, Resource resource) {
         assignations.add(new Assignation(operation, time, resource));
     }

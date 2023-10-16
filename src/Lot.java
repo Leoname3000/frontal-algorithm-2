@@ -1,5 +1,5 @@
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.HashSet;
 
 public class Lot {
@@ -8,11 +8,13 @@ public class Lot {
         this.arrival = arrival;
         this.deadline = deadline;
         this.priority = priority;
+        this.discount = Duration.ZERO;
     }
     HashSet<Operation> operations;
     LocalDateTime arrival;
     LocalDateTime deadline;
     int priority;
+    Duration discount;
     void add(Operation operation) {
         operations.add(operation);
     }

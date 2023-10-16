@@ -12,7 +12,9 @@ public class Resource implements Comparable<Resource> {
     String name;
     Schedule schedule;
     public LocalDateTime availableTime;
-
+    public void reset() {
+        availableTime = schedule.intervals.first().open;
+    }
     public LocalDateTime requestLockTime(LocalDateTime frontTime, Operation operation) {
         LocalDateTime result;
         if (frontTime.isAfter(availableTime))

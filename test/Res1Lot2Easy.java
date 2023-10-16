@@ -103,7 +103,7 @@ public class Res1Lot2Easy {
         expected.assign(op12, startingDate.plusDays(1).atTime(14, 0), res);
         expected.assign(op13, startingDate.plusDays(2).atTime(12, 0), res);
 
-        Assert.assertEquals(expected, frontalAlgorithm.run(new LateStartComparator()));
+        Assert.assertEquals(expected, frontalAlgorithm.iterRun(new LateStartComparator(), Duration.ofMinutes(30)));
     }
 
     public static void main(String[] args) {
