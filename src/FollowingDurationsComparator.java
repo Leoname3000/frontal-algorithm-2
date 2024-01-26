@@ -1,9 +1,11 @@
 import java.util.Comparator;
 
-public class DeadlineComparator implements Comparator<Operation> {
+public class FollowingDurationsComparator implements Comparator<Operation> {
     @Override
     public int compare(Operation o1, Operation o2) {
-        int result = o1.lot.deadline.compareTo(o2.lot.deadline);
+        var sumDur1 = o1.countAllFollowingDurations();
+        var sumDur2 = o2.countAllFollowingDurations();
+        int result = sumDur1.compareTo(sumDur2) * -1;
         if (result != 0) return result * 10;
 
         var nc = new NameComparator();

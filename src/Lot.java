@@ -10,6 +10,15 @@ public class Lot {
         this.priority = priority;
         this.discount = Duration.ZERO;
     }
+    public Lot(String name, LocalDateTime arrival, LocalDateTime deadline, int priority) {
+        this.name = name;
+        operations = new HashSet<>();
+        this.arrival = arrival;
+        this.deadline = deadline;
+        this.priority = priority;
+        this.discount = Duration.ZERO;
+    }
+    String name;
     HashSet<Operation> operations;
     LocalDateTime arrival;
     LocalDateTime deadline;

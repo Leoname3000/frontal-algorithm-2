@@ -1,5 +1,7 @@
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.TreeSet;
 
 public class Resource implements Comparable<Resource> {
     public Resource(String name, Schedule schedule) {
@@ -31,7 +33,8 @@ public class Resource implements Comparable<Resource> {
                 }
             }
         }
-        throw new RuntimeException("Impossible to assign " + operation +" on given schedule!");
+        return null;
+        //throw new RuntimeException("Ресурс " + name + " не смог назначить " + operation + " ни на один из своих интервалов.");
     }
 
     public LocalDateTime lock(LocalDateTime frontTime, Operation operation) {
@@ -60,7 +63,83 @@ public class Resource implements Comparable<Resource> {
         throw new RuntimeException("Impossible to assign operation on given schedule!");
     }
 
+    public LocalDateTime whenEarlyStart(LocalDateTime arrival, Operation operation) {
+        var intervalsClone = new TreeSet<Schedule.Interval>(new Schedule.IntervalComparator());
+        for (var interval : schedule.intervals) {
+            intervalsClone.add(interval.clone());
+        }
+        var earlyInterval = intervalsClone.first();
+        while (!earlyInterval.close.isAfter(arrival)) {
+            earlyInterval = intervalsClone.higher(earlyInterval);
+            if (earlyInterval == null) return null;
+        }
+        if (earlyInterval.open.isBefore(arrival)) {
+            earlyInterval.open = arrival;
+        }
+
+        if (!operation.interruptable) {
+            while (operation.duration.compareTo(earlyInterval.length()) > 0) {
+                earlyInterval = intervalsClone.higher(earlyInterval);
+                if (earlyInterval == null) return null;
+            }
+            //return earlyInterval.open.plus(operation.duration);
+            return earlyInterval.open;
+        }
+        else {
+            return earlyInterval.open;
+//            Duration durationLeft = operation.duration;
+//            while (durationLeft.isPositive()) {
+//                if (durationLeft.compareTo(earlyInterval.length()) > 0) {
+//                    durationLeft = durationLeft.minus(earlyInterval.length());
+//                }
+//                else {
+//                    return earlyInterval.open.plus(durationLeft);
+//                }
+//                earlyInterval = intervalsClone.higher(earlyInterval);
+//                if (earlyInterval == null) return null;
+//            }
+//            return null;
+        }
+    }
+
     public LocalDateTime whenLateStart(LocalDateTime deadline, Operation operation) {
+        var intervalsClone = new TreeSet<Schedule.Interval>(new Schedule.IntervalComparator());
+        for (var interval : schedule.intervals) {
+            intervalsClone.add(interval.clone());
+        }
+        var lateInterval = intervalsClone.last();
+        while (!lateInterval.open.isBefore(deadline)) {
+            lateInterval = intervalsClone.lower(lateInterval);
+            if (lateInterval == null) return null;
+        }
+        if (lateInterval.close.isAfter(deadline)) {
+            lateInterval.close = deadline;
+        }
+
+        if (!operation.interruptable) {
+            while (operation.duration.compareTo(lateInterval.length()) > 0) {
+                lateInterval = intervalsClone.lower(lateInterval);
+                if (lateInterval == null) return null;
+            }
+            return lateInterval.close.minus(operation.duration);
+        }
+        else {
+            Duration durationLeft = operation.duration;
+            while (durationLeft.isPositive()) {
+                if (durationLeft.compareTo(lateInterval.length()) > 0) {
+                    durationLeft = durationLeft.minus(lateInterval.length());
+                }
+                else {
+                    return lateInterval.close.minus(durationLeft);
+                }
+                lateInterval = intervalsClone.lower(lateInterval);
+                if (lateInterval == null) return null;
+            }
+            return null;
+        }
+    }
+
+    public LocalDateTime oldWhenLateStart(LocalDateTime deadline, Operation operation) {
         Schedule.Interval lateInterval = schedule.intervals.first().clone();
 //        while (schedule.intervals.higher(lateInterval) != null && schedule.intervals.higher(lateInterval).open.isBefore(deadline)) {
 //            lateInterval = schedule.intervals.higher(lateInterval).clone();

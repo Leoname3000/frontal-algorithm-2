@@ -139,7 +139,8 @@ public class Res1Lot2Hard {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res1Lot2Hard();
-            Solution solution = task.frontalAlgorithm.iterRun(new LateStartComparator(), Duration.ofMinutes(30));
+            IStrategy strategy = new DefaultStrategy(new LateStartComparator(), Duration.ofMinutes(30), 10);
+            Solution solution = task.frontalAlgorithm.iterRun(strategy);
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });

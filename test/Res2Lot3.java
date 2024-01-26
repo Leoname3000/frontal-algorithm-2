@@ -25,6 +25,7 @@ public class Res2Lot3 {
         Schedule schedule1 = new Schedule.ScheduleBuilder()
                 .addWeek(startingDate, LocalTime.of(8, 0), LocalTime.of(12, 0))
                 .addWeek(startingDate, LocalTime.of(14, 0), LocalTime.of(18, 0))
+                //.addManual(LocalDateTime.of(2023, 2, 27, 11, 0), LocalDateTime.of(2023, 2, 27, 18, 0))
                 .build();
 
         Schedule schedule2 = new Schedule.ScheduleBuilder()
@@ -187,7 +188,9 @@ public class Res2Lot3 {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             var task = new Res2Lot3();
-            Solution solution = task.frontalAlgorithm.iterRun(new LateStartComparator(), Duration.ofMinutes(120));
+            IStrategy strategy = new DefaultStrategy(new LateStartComparator(), Duration.ofMinutes(30), 10);
+            //Solution solution = task.frontalAlgorithm.iterRun(strategy);
+            Solution solution = task.frontalAlgorithm.run(new CombinedComparator());
             var outputFrame = new OutputFrame(solution);
             outputFrame.setVisible(true);
         });

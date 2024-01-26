@@ -44,21 +44,54 @@ public class Solution {
     public Solution() {
         this.assignations = new TreeSet<>();
         this.totalPenalty = null;
+
+        this.history = new TreeMap<>();
+        this.capacityDrops = new TreeMap<>();
+        this.specialCapacityDrops = new TreeMap<>();
     }
     TreeSet<Assignation> assignations;
     public TreeMap<Duration, Lot> penalties;
     private Duration totalPenalty;
     public Duration totalPenalty() {
         if (totalPenalty != null) return totalPenalty;
-        totalPenalty = Duration.ZERO;
+        var result = Duration.ZERO;
         for (var penalty : penalties.keySet()) {
-            totalPenalty = totalPenalty.plus(penalty);
+            if (penalty.isPositive()) {
+                result = result.plus(penalty);
+            }
         }
-        return totalPenalty;
+        totalPenalty = result;
+        return result;
     }
 
     public void assign(Operation operation, LocalDateTime time, Resource resource) {
         assignations.add(new Assignation(operation, time, resource));
+
+        // Count capacity drop:
+        Assignation prevAssign = null;
+        for (var a : assignations) {
+            if (a.time.isBefore(time) && a.resource.compareTo(resource) == 0 && (prevAssign == null || a.time.isAfter(prevAssign.time))) {
+                prevAssign = a;
+            }
+        }
+        if (prevAssign == null) {
+            capacityDrops.put(Duration.ZERO, operation);
+            specialCapacityDrops.put(Duration.ZERO, operation);
+            return;
+        }
+        var capacityDrop = prevAssign.operation.timeCapacity().minus(operation.timeCapacity());
+        if (capacityDrop.isPositive()) {
+            capacityDrops.put(capacityDrop, operation);
+        } else {
+            capacityDrops.put(Duration.ZERO, operation);
+        }
+
+        var specialCapacityDrop = prevAssign.operation.specialTimeCapacity().minus(operation.specialTimeCapacity());
+        if (specialCapacityDrop.isPositive()) {
+            specialCapacityDrops.put(specialCapacityDrop, operation);
+        } else {
+            specialCapacityDrops.put(Duration.ZERO, operation);
+        }
     }
 
     @Override
@@ -76,4 +109,8 @@ public class Solution {
         Solution evaluated = (Solution) object;
         return assignations.equals(evaluated.assignations);
     }
+
+    TreeMap<Resource, TreeMap<Operation, LocalDateTime>> history;
+    TreeMap<Duration, Operation> capacityDrops;
+    TreeMap<Duration, Operation> specialCapacityDrops;
 }

@@ -7,7 +7,7 @@ import static java.time.temporal.TemporalAdjusters.firstInMonth;
 
 
 public class Schedule {
-    public static class Interval {
+    public static class Interval implements Comparable<Interval> {
         public Interval(LocalDateTime open, LocalDateTime close) {
             if (open.isAfter(close))
                 throw new RuntimeException("Opening after closing!");
@@ -23,6 +23,11 @@ public class Schedule {
         @Override
         protected Interval clone() {
             return new Interval(open, close);
+        }
+
+        @Override
+        public int compareTo(Interval o) {
+            return open.compareTo(o.open);
         }
     }
     public static class IntervalComparator implements Comparator<Interval> {

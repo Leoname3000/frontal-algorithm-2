@@ -1,9 +1,11 @@
 import java.util.Comparator;
 
-public class DeadlineComparator implements Comparator<Operation> {
+public class FollowersComparator implements Comparator<Operation> {
     @Override
     public int compare(Operation o1, Operation o2) {
-        int result = o1.lot.deadline.compareTo(o2.lot.deadline);
+        Integer followers1 = o1.countAllFollowers();
+        Integer followers2 = o2.countAllFollowers();
+        int result = followers1.compareTo(followers2) * -1;
         if (result != 0) return result * 10;
 
         var nc = new NameComparator();
@@ -14,3 +16,4 @@ public class DeadlineComparator implements Comparator<Operation> {
 //        return hash1.compareTo(hash2);
     }
 }
+

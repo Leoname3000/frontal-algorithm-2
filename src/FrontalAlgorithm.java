@@ -17,39 +17,17 @@ public class FrontalAlgorithm {
         TreeSet<Resource> resourceGroup = operation.group.resources;
         Resource minResource = null;
         for (Resource res : resourceGroup) {
-            if (minResource == null || res.requestLockTime(frontTime, operation).isBefore(minResource.requestLockTime(frontTime, operation))) {
+            var lockTime = res.requestLockTime(frontTime, operation);
+            if ((minResource == null && lockTime != null) || (lockTime != null && minResource.requestLockTime(frontTime, operation) != null && lockTime.isBefore(minResource.requestLockTime(frontTime, operation)))) {
                 minResource = res;
             }
         }
+        if (minResource == null) throw new RuntimeException("Ни один из ресурсов не смог назначить " + operation + " ни на один из своих интервалов");
         return minResource;
     }
 
-    public Solution iterRun(Comparator<Operation> operationComparator, Duration discount) {
-        Solution basicSolution = run(operationComparator);
-        System.out.println("THIS WAS THE BASIC SOLUTION\n");
-        while (basicSolution.totalPenalty().isPositive()) {
-            Lot badLot = basicSolution.penalties.firstEntry().getValue();
-            badLot.discount = badLot.discount.plus(discount);
-            // inside 'run()' subtract lot.discount from lateStart inside each lot's operation 'lateStart()' method
-
-            for (var lot : allLots)
-                for (var operation : lot.operations) {
-                    operation.reset();
-                    for (var resource : operation.group.resources)
-                        resource.reset();
-                }
-
-            Solution discountSolution = run(operationComparator);
-            if (discountSolution.totalPenalty().compareTo(basicSolution.totalPenalty()) < 0) {
-                System.out.println("NEW SOLUTION IS BETTER! - CONTINUE...\n");
-                basicSolution = discountSolution;
-            } else {
-                System.out.println("PREVIOUS SOLUTION WAS BETTER OR EQUAL! - STOPPING!\n");
-                return basicSolution;
-            }
-        }
-        System.out.println("BASIC SOLUTION REMAINS");
-        return basicSolution;
+    public Solution iterRun(IStrategy strategy) {
+        return strategy.iterativeRun(this);
     }
 
     public Solution run(Comparator<Operation> operationComparator) {
@@ -99,7 +77,7 @@ public class FrontalAlgorithm {
 //            }
 
             // FA step 4 TODO: Assure "IsAfter" is needed
-            if (minResTime.equals(frontTime) /* || frontTime.isBefore(minResTime)*/ ) {
+            if (minResTime != null && minResTime.equals(frontTime) /* || frontTime.isBefore(minResTime)*/ ) {
                 // FA step 5
                 LocalDateTime lockTime = resource.lock(frontTime, operation);
                 solution.assign(operation, minResTime, resource);
@@ -120,12 +98,15 @@ public class FrontalAlgorithm {
                         }
                     }
                     if (allPrecedentsServed) {
+                        System.out.println("> Follower " + follower + " can be added!");
                         TreeSet<Operation> frontForFollower = fronts.get(maxEndOfService);
                         if (frontForFollower == null || frontForFollower.isEmpty()) {
                             frontForFollower = new TreeSet<>(operationComparator);
                         }
                         frontForFollower.add(follower);
                         fronts.put(maxEndOfService, frontForFollower); // Can be simplified?
+                    } else {
+                        System.out.println("> Follower " + follower + " CAN'T be added yet!");
                     }
                 }
 //
@@ -149,7 +130,7 @@ public class FrontalAlgorithm {
 //                minResTime = resource.requestLockTime(operation);
             }
             //TODO: this 'else' should execute any way? (NO, should not if 'if' above worked, because 'else' will execute on the next iteration anyways)
-            else if (minResTime.isAfter(frontTime)) {
+            else if (minResTime != null && minResTime.isAfter(frontTime)) {
                 // Continuation of FA step 4
 
                 TreeSet<Operation> nextFront = fronts.get(minResTime);
@@ -157,6 +138,12 @@ public class FrontalAlgorithm {
                     nextFront = new TreeSet<>(operationComparator);
 
                 nextFront.add(operation);
+
+//                if (fronts.containsKey(minResTime)) {
+//                    var f = fronts.get(minResTime);
+//                    f.add(operation);
+//                    fronts.put(minResTime, f);
+//                }
                 fronts.put(minResTime, nextFront); // Can be simplified?
                 front.remove(operation);
 
@@ -166,6 +153,7 @@ public class FrontalAlgorithm {
                     fronts.remove(frontTime);
             }
             else {
+                //System.out.println(resource + " не смог назначить " + operation + " в ходе работы алгоритма");
                 throw new RuntimeException("FrontTime is after minResTime!");
             }
         }
@@ -192,11 +180,11 @@ public class FrontalAlgorithm {
             }
             assert last != null;
             if (last.endOfService.isAfter(lot.deadline)) {
-                System.out.println(lot + " missed deadline! Late by " + Duration.between(lot.deadline, last.endOfService));
+                System.out.println(lot.name + " missed deadline! Late by " + Duration.between(lot.deadline, last.endOfService));
                 penalties.put(Duration.between(lot.deadline, last.endOfService), lot);
             }
             else {
-                System.out.println(lot + " processed on time! Early by " + Duration.between(last.endOfService, lot.deadline));
+                System.out.println(lot.name + " processed on time! Early by " + Duration.between(last.endOfService, lot.deadline));
                 penalties.put(Duration.ZERO, lot);
             }
         }
